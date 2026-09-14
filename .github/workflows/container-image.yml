@@ -72,6 +72,7 @@ jobs:
         if: ${{ steps.secrets.outcome == 'success' }}
         run: |
           make -j${NPROC} V=1 DEBUG=0 POSTGRES=1 logosdeliverynode
+          make -j${NPROC} V=1 DEBUG=0 rlnkeystore
 
       - name: Audit installed deps
         if: ${{ steps.secrets.outcome == 'success' }}
@@ -85,28 +86,23 @@ jobs:
 
           TAG=$([ "${PR_NUMBER}" == "" ] && echo "${SHORT_REF}" || echo "${PR_NUMBER}")
           IMAGE=quay.io/wakuorg/nwaku-pr:${TAG}
-          LD_IMAGE=quay.io/wakuorg/nwaku-pr:${TAG}-logosdeliverynode
 
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
-          echo "ld_image=${LD_IMAGE}" >> $GITHUB_OUTPUT
           echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
           docker build -t ${IMAGE} -f docker/binaries/Dockerfile.bn.amd64 --label quay.expires-after=30d .
-
-          # Second tag for the same image.
-          docker tag ${IMAGE} ${LD_IMAGE}
         env:
           PR_NUMBER: ${{ inputs.image_tag}}
 
       # A quay.io outage must not fail CI when the caller can take the image as
       # an artifact instead; without artifact_fallback a failed push still fails.
-      - name: Push images
+      - name: Push image
         id: push
         if: ${{ steps.secrets.outcome == 'success' }}
         shell: bash
         run: |
           if { docker login -u ${QUAY_USER} -p ${QUAY_PASSWORD} quay.io \
-               && docker push ${IMAGE} && docker push ${LD_IMAGE}; } 2>&1 | tee push.log; then
+               && docker push ${IMAGE}; } 2>&1 | tee push.log; then
             echo "pushed=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -130,7 +126,6 @@ jobs:
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
           QUAY_USER: ${{ secrets.QUAY_USER }}
           IMAGE: ${{ steps.build.outputs.image }}
-          LD_IMAGE: ${{ steps.build.outputs.ld_image }}
           ARTIFACT_FALLBACK: ${{ inputs.artifact_fallback }}
 
       - name: Save image
@@ -155,11 +150,10 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && steps.push.outputs.pushed == 'true' }}
         with:
           message: |
-            You can find the images built from this PR at
+            You can find the image built from this PR at
 
             ```
             ${{steps.build.outputs.image}}
-            ${{steps.build.outputs.ld_image}}
             ```
 
             Built from ${{ steps.build.outputs.commit_hash }}
@@ -172,7 +166,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && steps.push.outputs.pushed == 'false' }}
         with:
           message: |
-            :warning: Could not push the images built from this PR to quay.io, which may be having an outage (see https://status.redhat.com):
+            :warning: Could not push the image built from this PR to quay.io, which may be having an outage (see https://status.redhat.com):
 
             ```
             ${{ steps.push.outputs.error }}
