@@ -62,10 +62,10 @@ procSuite "WakuNode - RLN relay":
       let manager1 = cast[RlnEvmGroupManager](node1.rln.groupManager)
       let idCredentials1 = generateCredentials()
 
-      (waitFor manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
+      (await manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated1 = waitFor manager1.updateRoots()
+      let rootUpdated1 = await manager1.updateRoots()
       info "Updated root for node1", rootUpdated1
 
     lockNewGlobalBrokerContext:
@@ -83,7 +83,7 @@ procSuite "WakuNode - RLN relay":
       await node2.start()
 
       let manager2 = cast[RlnEvmGroupManager](node2.rln.groupManager)
-      let rootUpdated2 = waitFor manager2.updateRoots()
+      let rootUpdated2 = await manager2.updateRoots()
       info "Updated root for node2", rootUpdated2
 
     lockNewGlobalBrokerContext:
@@ -101,7 +101,7 @@ procSuite "WakuNode - RLN relay":
       await node3.start()
 
       let manager3 = cast[RlnEvmGroupManager](node3.rln.groupManager)
-      let rootUpdated3 = waitFor manager3.updateRoots()
+      let rootUpdated3 = await manager3.updateRoots()
       info "Updated root for node3", rootUpdated3
 
     # connect them together
@@ -173,10 +173,10 @@ procSuite "WakuNode - RLN relay":
       let manager1 = cast[RlnEvmGroupManager](node1.rln.groupManager)
       let idCredentials1 = generateCredentials()
 
-      (waitFor manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
+      (await manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated1 = waitFor manager1.updateRoots()
+      let rootUpdated1 = await manager1.updateRoots()
       info "Updated root for node", node = 1, rootUpdated = rootUpdated1
     lockNewGlobalBrokerContext:
       let nodeKey2 = generateSecp256k1Key()
@@ -190,10 +190,10 @@ procSuite "WakuNode - RLN relay":
       let manager2 = cast[RlnEvmGroupManager](node2.rln.groupManager)
       let idCredentials2 = generateCredentials()
 
-      (waitFor manager2.register(idCredentials2, UserMessageLimit(20))).isOkOr:
+      (await manager2.register(idCredentials2, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated2 = waitFor manager2.updateRoots()
+      let rootUpdated2 = await manager2.updateRoots()
       info "Updated root for node", node = 2, rootUpdated = rootUpdated2
     lockNewGlobalBrokerContext:
       let nodeKey3 = generateSecp256k1Key()
@@ -207,10 +207,10 @@ procSuite "WakuNode - RLN relay":
       let manager3 = cast[RlnEvmGroupManager](node3.rln.groupManager)
       let idCredentials3 = generateCredentials()
 
-      (waitFor manager3.register(idCredentials3, UserMessageLimit(20))).isOkOr:
+      (await manager3.register(idCredentials3, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated3 = waitFor manager3.updateRoots()
+      let rootUpdated3 = await manager3.updateRoots()
       info "Updated root for node", node = 3, rootUpdated = rootUpdated3
 
     let shards =
@@ -324,10 +324,10 @@ procSuite "WakuNode - RLN relay":
       let manager1 = cast[RlnEvmGroupManager](node1.rln.groupManager)
       let idCredentials1 = generateCredentials()
 
-      (waitFor manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
+      (await manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated1 = waitFor manager1.updateRoots()
+      let rootUpdated1 = await manager1.updateRoots()
       info "Updated root for node1", rootUpdated1
     lockNewGlobalBrokerContext:
       # Relay node
@@ -343,7 +343,7 @@ procSuite "WakuNode - RLN relay":
       await node2.start()
 
       let manager2 = cast[RlnEvmGroupManager](node2.rln.groupManager)
-      let rootUpdated2 = waitFor manager2.updateRoots()
+      let rootUpdated2 = await manager2.updateRoots()
       info "Updated root for node2", rootUpdated2
     lockNewGlobalBrokerContext:
       # Subscriber
@@ -359,7 +359,7 @@ procSuite "WakuNode - RLN relay":
       await node3.start()
 
       let manager3 = cast[RlnEvmGroupManager](node3.rln.groupManager)
-      let rootUpdated3 = waitFor manager3.updateRoots()
+      let rootUpdated3 = await manager3.updateRoots()
       info "Updated root for node3", rootUpdated3
 
     # connect them together
@@ -436,10 +436,10 @@ procSuite "WakuNode - RLN relay":
       let manager1 = cast[RlnEvmGroupManager](node1.rln.groupManager)
       let idCredentials1 = generateCredentials()
 
-      (waitFor manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
+      (await manager1.register(idCredentials1, UserMessageLimit(20))).isOkOr:
         assert false, "error returned when calling register: " & error
 
-      let rootUpdated1 = waitFor manager1.updateRoots()
+      let rootUpdated1 = await manager1.updateRoots()
       info "Updated root for node1", rootUpdated1
     lockNewGlobalBrokerContext:
       # Relay node
@@ -457,7 +457,7 @@ procSuite "WakuNode - RLN relay":
 
       # Registration is mandatory before sending messages with rln-relay
       let manager2 = cast[RlnEvmGroupManager](node2.rln.groupManager)
-      let rootUpdated2 = waitFor manager2.updateRoots()
+      let rootUpdated2 = await manager2.updateRoots()
       info "Updated root for node2", rootUpdated2
     lockNewGlobalBrokerContext:
       # Subscriber
@@ -475,7 +475,7 @@ procSuite "WakuNode - RLN relay":
 
       # Registration is mandatory before sending messages with rln-relay
       let manager3 = cast[RlnEvmGroupManager](node3.rln.groupManager)
-      let rootUpdated3 = waitFor manager3.updateRoots()
+      let rootUpdated3 = await manager3.updateRoots()
       info "Updated root for node3", rootUpdated3
 
     # connect the nodes together node1 <-> node2 <-> node3
@@ -777,13 +777,13 @@ procSuite "WakuNode - RLN relay":
 
       let rlnManager = cast[RlnEvmGroupManager](node.rln.groupManager)
       let idCredentials = generateCredentials()
-      (waitFor rlnManager.register(idCredentials, UserMessageLimit(20))).isOkOr:
+      (await rlnManager.register(idCredentials, UserMessageLimit(20))).isOkOr:
         assert false, "Failed to register: " & error
 
-      let rootUpdated = waitFor rlnManager.updateRoots()
+      let rootUpdated = await rlnManager.updateRoots()
       info "Updated root", rootUpdated
 
-      let proofRes = waitFor rlnManager.fetchMerkleProofElements()
+      let proofRes = await rlnManager.fetchMerkleProofElements()
       assert proofRes.isOk(), "failed to fetch merkle proof: " & proofRes.error
       let goodCache = proofRes.get()
       rlnManager.merkleProofCache = goodCache
