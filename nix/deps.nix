@@ -40,8 +40,8 @@
 
   boringssl = pkgs.fetchgit {
     url = "https://github.com/vacp2p/nim-boringssl";
-    rev = "346429e4cda48e775f2d1eb3ccb8757edf4f3648";
-    sha256 = "0x46sdq75zp84qahwh472qr33xw38adrsp41fksh7xwwd6384fl3";
+    rev = "fbf9c2762241be3f004d45b9a32b7bfd6ea136a8";
+    sha256 = "10lkp39rz21lawb5r93d6w679gdyfgfp7lkcxyg7lm1i2kyp11kl";
     fetchSubmodules = true;
   };
 
@@ -222,8 +222,8 @@
 
   leopard = pkgs.fetchgit {
     url = "https://github.com/status-im/nim-leopard";
-    rev = "0478b12df90cbbe531efa69422cff67b5a3a5d93";
-    sha256 = "1lfwsqrdc3nzdc3a2v4fmx2ilqxyipb8v3n08ffcf2zj5nrjgql4";
+    rev = "2e8de41205ea44b6f33b5cad676bab215b36c987";
+    sha256 = "0zkcpbqfn7c14i8sssh594d0ffmb62xcaswwl7j5fs5ssip6q2fk";
     fetchSubmodules = true;
   };
 

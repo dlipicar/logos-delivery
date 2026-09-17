@@ -64,15 +64,15 @@
       }
     },
     "boringssl": {
-      "version": "#v0.0.11",
-      "vcsRevision": "346429e4cda48e775f2d1eb3ccb8757edf4f3648",
+      "version": "#v0.0.13",
+      "vcsRevision": "fbf9c2762241be3f004d45b9a32b7bfd6ea136a8",
       "url": "https://github.com/vacp2p/nim-boringssl",
       "downloadMethod": "git",
       "dependencies": [
         "nim"
       ],
       "checksums": {
-        "sha1": "49acb43d56a26b30587c9758edb34e3c44b63d8f"
+        "sha1": "706b29a12b4462400524c570b953752dfb285d4d"
       }
     },
     "unittest2": {
@@ -451,8 +451,8 @@
       }
     },
     "leopard": {
-      "version": "#0478b12df90cbbe531efa69422cff67b5a3a5d93",
-      "vcsRevision": "0478b12df90cbbe531efa69422cff67b5a3a5d93",
+      "version": "#2e8de41205ea44b6f33b5cad676bab215b36c987",
+      "vcsRevision": "2e8de41205ea44b6f33b5cad676bab215b36c987",
       "url": "https://github.com/status-im/nim-leopard",
       "downloadMethod": "git",
       "dependencies": [
@@ -461,7 +461,7 @@
         "results"
       ],
       "checksums": {
-        "sha1": "9352901ef26dfdc51dfc76c500be05a3c89abb1b"
+        "sha1": "2fc77ade5d088afbb56c555a295f1cf286cebb7d"
       }
     },
     "taskpools": {

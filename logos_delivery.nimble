@@ -87,13 +87,17 @@ requires "https://github.com/NagyZoltanPeter/nim-brokers.git#c370ac112129645dba5
 
 requires "https://github.com/logos-messaging/nim-segmentation#0593ef7c9267b0204093fe202bec477b2dbf824c"
 
+# Cross-compilation paths (nim-leopard#27). segmentation still pins the commit
+# before it; the lock is authoritative, so this root pin is what nimble installs.
+requires "https://github.com/status-im/nim-leopard#2e8de41205ea44b6f33b5cad676bab215b36c987"
+
 # v0.9.0: https://github.com/vacp2p/nim-lsquic/releases/tag/v0.9.0
 # libp2p requires "lsquic >= 0.9.0" by name. The exact numeric constraint
 # keeps the resolution at the validated release instead of floating to
 # the newest one.
 requires "https://github.com/vacp2p/nim-lsquic#fb293834a3f90368e1f6c57aec2360cf8d840c5a"
 
-requires "https://github.com/vacp2p/nim-boringssl#v0.0.11"
+requires "https://github.com/vacp2p/nim-boringssl#v0.0.13"
 
 # No tag at pinning time; revision was one commit after v0.2.0.
 requires "https://github.com/vacp2p/nim-jwt.git#057ec95eb5af0eea9c49bfe9025b3312c95dc5f2"
