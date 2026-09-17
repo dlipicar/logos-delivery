@@ -25,21 +25,24 @@ proc unsafeAppendRLNProof*(
   ##   proof elements, updating `merkleProofCache` (bypasses `trackRootsChanges`).
   ## WARNING: For testing only
 
-  let manager = cast[RlnEvmGroupManager](rlnPeer.groupManager)
-  let rootUpdated = waitFor manager.updateRoots()
+  # A blocking helper the tests call as a plain proc. chronos 4.4.0 tags
+  # `waitFor` with NestedPoll, so the tag is dropped here, not in each caller.
+  {.cast(tags: []).}:
+    let manager = cast[RlnEvmGroupManager](rlnPeer.groupManager)
+    let rootUpdated = waitFor manager.updateRoots()
 
-  # Fetch Merkle proof either when a new root was detected *or* when the cache is empty.
-  if rootUpdated or manager.merkleProofCache.len == 0:
-    let proofResult = waitFor manager.fetchMerkleProofElements()
-    if proofResult.isErr():
-      error "Failed to fetch Merkle proof", error = proofResult.error
-    manager.merkleProofCache = proofResult.get()
+    # Fetch Merkle proof either when a new root was detected *or* when the cache is empty.
+    if rootUpdated or manager.merkleProofCache.len == 0:
+      let proofResult = waitFor manager.fetchMerkleProofElements()
+      if proofResult.isErr():
+        error "Failed to fetch Merkle proof", error = proofResult.error
+      manager.merkleProofCache = proofResult.get()
 
-  let proof = (waitFor manager.generateProof(msg.toRLNSignal(), epoch, messageId)).valueOr:
-    return err("could not generate rln-v2 proof: " & $error)
+    let proof = (waitFor manager.generateProof(msg.toRLNSignal(), epoch, messageId)).valueOr:
+      return err("could not generate rln-v2 proof: " & $error)
 
-  msg.proof = proof.encode().buffer
-  return ok()
+    msg.proof = proof.encode().buffer
+    return ok()
 
 proc getWakuRlnConfig*(
     manager: RlnEvmGroupManager,

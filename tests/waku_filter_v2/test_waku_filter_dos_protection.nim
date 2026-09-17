@@ -28,7 +28,10 @@ proc init(T: type[AFilterClient]): T =
     msgSeq: @[],
     pushHandlerFuture: newPushHandlerFuture(),
   )
-  r.wakuFilterClient = waitFor newTestWakuFilterClient(r.clientSwitch)
+  # These four helpers block on purpose. chronos 4.4.0 tags `waitFor` with
+  # NestedPoll, so the tag is dropped here rather than in each async caller.
+  {.cast(tags: []).}:
+    r.wakuFilterClient = waitFor newTestWakuFilterClient(r.clientSwitch)
   r.messagePushHandler = proc(
       pubsubTopic: PubsubTopic, message: WakuMessage
   ): Future[void] {.async, closure, gcsafe.} =
@@ -45,13 +48,14 @@ proc subscribe(
     pubsubTopic: PubsubTopic,
     contentTopicSeq: seq[ContentTopic],
 ): Opt[FilterSubscribeErrorKind] =
-  let subscribeResponse = waitFor client.wakuFilterClient.subscribe(
-    serverRemotePeerInfo, pubsubTopic, contentTopicSeq
-  )
-  if subscribeResponse.isOk():
-    return Opt.none(FilterSubscribeErrorKind)
+  {.cast(tags: []).}:
+    let subscribeResponse = waitFor client.wakuFilterClient.subscribe(
+      serverRemotePeerInfo, pubsubTopic, contentTopicSeq
+    )
+    if subscribeResponse.isOk():
+      return Opt.none(FilterSubscribeErrorKind)
 
-  return Opt.some(subscribeResponse.error().kind)
+    return Opt.some(subscribeResponse.error().kind)
 
 proc unsubscribe(
     client: AFilterClient,
@@ -59,22 +63,24 @@ proc unsubscribe(
     pubsubTopic: PubsubTopic,
     contentTopicSeq: seq[ContentTopic],
 ): Opt[FilterSubscribeErrorKind] =
-  let unsubscribeResponse = waitFor client.wakuFilterClient.unsubscribe(
-    serverRemotePeerInfo, pubsubTopic, contentTopicSeq
-  )
-  if unsubscribeResponse.isOk():
-    return Opt.none(FilterSubscribeErrorKind)
+  {.cast(tags: []).}:
+    let unsubscribeResponse = waitFor client.wakuFilterClient.unsubscribe(
+      serverRemotePeerInfo, pubsubTopic, contentTopicSeq
+    )
+    if unsubscribeResponse.isOk():
+      return Opt.none(FilterSubscribeErrorKind)
 
-  return Opt.some(unsubscribeResponse.error().kind)
+    return Opt.some(unsubscribeResponse.error().kind)
 
 proc ping(
     client: AFilterClient, serverRemotePeerInfo: RemotePeerInfo
 ): Opt[FilterSubscribeErrorKind] =
-  let pingResponse = waitFor client.wakuFilterClient.ping(serverRemotePeerInfo)
-  if pingResponse.isOk():
-    return Opt.none(FilterSubscribeErrorKind)
+  {.cast(tags: []).}:
+    let pingResponse = waitFor client.wakuFilterClient.ping(serverRemotePeerInfo)
+    if pingResponse.isOk():
+      return Opt.none(FilterSubscribeErrorKind)
 
-  return Opt.some(pingResponse.error().kind)
+    return Opt.some(pingResponse.error().kind)
 
 suite "Waku Filter - DOS protection":
   var serverSwitch {.threadvar.}: Switch

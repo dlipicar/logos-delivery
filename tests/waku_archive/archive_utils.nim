@@ -41,8 +41,11 @@ proc newFailingArchiveDriver*(): ArchiveDriver =
 proc put*(
     driver: ArchiveDriver, pubsubTopic: PubSubTopic, msgList: seq[WakuMessage]
 ): ArchiveDriver =
-  for msg in msgList:
-    let _ = waitFor driver.put(computeMessageHash(pubsubTopic, msg), pubsubTopic, msg)
+  # A blocking seeder that callers chain. chronos 4.4.0 tags `waitFor` with
+  # NestedPoll, so the tag is dropped here rather than in each async caller.
+  {.cast(tags: []).}:
+    for msg in msgList:
+      let _ = waitFor driver.put(computeMessageHash(pubsubTopic, msg), pubsubTopic, msg)
   return driver
 
 proc newArchiveDriverWithMessages*(
