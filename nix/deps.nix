@@ -110,8 +110,8 @@
 
   chronos = pkgs.fetchgit {
     url = "https://github.com/status-im/nim-chronos";
-    rev = "0ab802baef6bf16a8e3cc7d8a5c3128ddafadec5";
-    sha256 = "0hlj4jml2vl7hcvg7g33qa8vbhlgv0qhb07b2nsqc2dbp05lyka5";
+    rev = "0de7b335d0ad5557ad5ba71a4b7662f7b201750e";
+    sha256 = "1g2aml18f47qayg8ckl38l6i3dmvxdz2zcjf0gxim9dzzs0kam0m";
     fetchSubmodules = true;
   };
 
@@ -208,8 +208,8 @@
 
   brokers = pkgs.fetchgit {
     url = "https://github.com/NagyZoltanPeter/nim-brokers.git";
-    rev = "19565dd80621e33f6da396ef3fb07c379d55c324";
-    sha256 = "0jnn44pk587ck1l3ghjgy93d32fpxf0bjshri5ksnqjif2b7pdm9";
+    rev = "c370ac112129645dba551cc24eefd9120db8df24";
+    sha256 = "1aqk9znh0sprq4ayfahx1k1ihk6c0zvwkch1fm8v8j8czxmkw1hi";
     fetchSubmodules = true;
   };
 
@@ -236,8 +236,8 @@
 
   ffi = pkgs.fetchgit {
     url = "https://github.com/logos-messaging/nim-ffi";
-    rev = "07ee8e1d6500762bab290465457a8d23559de546";
-    sha256 = "04q5gmldyxd8jawrnjfws007zpyr4h08ijphp943iypbpblflfmz";
+    rev = "9950e18b4110b35bc62993114ee083b5062740e1";
+    sha256 = "0s3zc5yznxizcxrd4c4fd0x5cmy24wx7a15g738vcph5gdlmds4z";
     fetchSubmodules = true;
   };
 

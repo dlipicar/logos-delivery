@@ -21,7 +21,9 @@ const RequiredNimblePin = "07caee397d628c9e93d81048268365c4c2414a80"
 
 ### Dependencies
 requires "nim == 2.2.6",
-  "chronos >= 4.2.0 & < 4.4.0",
+  # 4.4.0 is the first release with chronos' closeThreadDispatcher
+  # (status-im/nim-chronos#614), which the pinned nim-ffi calls.
+  "chronos >= 4.4.0 & < 4.5.0",
   "taskpools",
   # Logging & Configuration
   "chronicles",
@@ -70,13 +72,18 @@ requires "nim == 2.2.6",
 # For commit-pinned releases, the preceding link records the associated
 # upstream release tag at the time the revision was selected.
 
-# v0.3.1-rc.0: https://github.com/logos-messaging/nim-ffi/releases/tag/v0.3.1-rc.0
-requires "https://github.com/logos-messaging/nim-ffi#07ee8e1d6500762bab290465457a8d23559de546"
+# Cross-target codegen paths (nim-ffi#168), hygienic request parameters
+# (nim-ffi#169) and a thread's dispatcher closed last, by chronos
+# (nim-ffi#171's merge), after v0.3.1-rc.0:
+requires "https://github.com/logos-messaging/nim-ffi#9950e18b4110b35bc62993114ee083b5062740e1"
 
 # No tag at pinning time; revision was 19 commits after v0.3.1-rc.0.
 requires "https://github.com/logos-messaging/nim-sds.git#b12f5ee07c5b764303b51fb948b32a4ade1de3b5"
 
-requires "https://github.com/NagyZoltanPeter/nim-brokers.git#v3.3.0"
+# v3.3.0 plus nim-brokers#57: its thread teardown no longer closes a dispatcher
+# it does not own, which nim-ffi#171 then closes again. No release carries it
+# yet; re-pin to one when it ships.
+requires "https://github.com/NagyZoltanPeter/nim-brokers.git#c370ac112129645dba551cc24eefd9120db8df24"
 
 requires "https://github.com/logos-messaging/nim-segmentation#0593ef7c9267b0204093fe202bec477b2dbf824c"
 
