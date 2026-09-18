@@ -21,8 +21,6 @@ const RequiredNimblePin = "07caee397d628c9e93d81048268365c4c2414a80"
 
 ### Dependencies
 requires "nim == 2.2.6",
-  # 4.4.0 is the first release with chronos' closeThreadDispatcher
-  # (status-im/nim-chronos#614), which the pinned nim-ffi calls.
   "chronos >= 4.4.0 & < 4.5.0",
   "taskpools",
   # Logging & Configuration
@@ -72,23 +70,15 @@ requires "nim == 2.2.6",
 # For commit-pinned releases, the preceding link records the associated
 # upstream release tag at the time the revision was selected.
 
-# Cross-target codegen paths (nim-ffi#168), hygienic request parameters (#169),
-# chronos closing a thread's dispatcher last (#171) and no crash on a nil handle
-# as the first call (#172's merge), after v0.3.1-rc.0:
 requires "https://github.com/logos-messaging/nim-ffi#5096bb7f4cb3cfe6514c2c45fc7d8135e8db084c"
 
 # No tag at pinning time; revision was 19 commits after v0.3.1-rc.0.
 requires "https://github.com/logos-messaging/nim-sds.git#b12f5ee07c5b764303b51fb948b32a4ade1de3b5"
 
-# v3.3.0 plus nim-brokers#57: its thread teardown no longer closes a dispatcher
-# it does not own, which nim-ffi#171 then closes again. No release carries it
-# yet; re-pin to one when it ships.
 requires "https://github.com/NagyZoltanPeter/nim-brokers.git#c370ac112129645dba551cc24eefd9120db8df24"
 
 requires "https://github.com/logos-messaging/nim-segmentation#0593ef7c9267b0204093fe202bec477b2dbf824c"
 
-# Cross-compilation paths (nim-leopard#27). segmentation still pins the commit
-# before it; the lock is authoritative, so this root pin is what nimble installs.
 requires "https://github.com/status-im/nim-leopard#2e8de41205ea44b6f33b5cad676bab215b36c987"
 
 # v0.9.0: https://github.com/vacp2p/nim-lsquic/releases/tag/v0.9.0

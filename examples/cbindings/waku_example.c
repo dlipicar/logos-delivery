@@ -143,15 +143,6 @@ void on_event_received(int callerRet, const char *msg, size_t len, void *userDat
   }
 }
 
-// Copies a reply out of the callback, which is the only place it is valid.
-static char *dup_reply(const NimFfiStr *reply)
-{
-  char *copy = malloc(reply->len + 1);
-  memcpy(copy, reply->data, reply->len);
-  copy[reply->len] = '\0';
-  return copy;
-}
-
 char *contentTopic = NULL;
 void handle_content_topic(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
 {
@@ -160,8 +151,11 @@ void handle_content_topic(int errCode, const NimFfiStr *reply, const char *errMs
     printf("Error: %s\n", errMsg != NULL ? errMsg : "(no message)");
     exit(1);
   }
+  // Copy the reply out: it is only valid inside this callback.
   free(contentTopic);
-  contentTopic = dup_reply(reply);
+  contentTopic = malloc(reply->len + 1);
+  memcpy(contentTopic, reply->data, reply->len);
+  contentTopic[reply->len] = '\0';
   signal_cond();
 }
 

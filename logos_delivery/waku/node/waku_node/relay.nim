@@ -284,9 +284,6 @@ proc setRlnValidator*(
         shareY = inHex(msgProof.shareY)
         nullifier = inHex(msgProof.nullifier)
 
-      # Qualified: rln_lez's ProofVerdict is in scope too and declares the same
-      # members, so which one an unqualified label binds to depended on module
-      # order -- it resolved to ProofVerdict under the mingw target.
       case validationRes
       of MessageValidationResult.Valid:
         trace "Message validity is verified, relaying",
