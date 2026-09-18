@@ -23,7 +23,8 @@ offers the call surface at two levels:
   `LogosDeliveryCtx *`; every other call takes it first, then its typed
   arguments, then a reply callback and `userData`:
   `logosdelivery_ctx_<name>(const LogosDeliveryCtx *ctx, <args>, LogosDelivery<Name>ReplyFn onReply, void *userData)`.
-  String arguments are `NimFfiStr`; wrap a C string with `nimffi_str()`.
+  Strings are plain NUL-terminated C strings: an argument takes a `const char *`,
+  and a string reply arrives as `const char *const *reply`, read as `*reply`.
 - **Raw exports**: the symbols the library actually exports, which take the
   request and deliver the reply as CBOR:
   `int logosdelivery_<name>(void *ctx, FFICallback cb, void *userData, const uint8_t *reqCbor, size_t reqCborLen)`.
@@ -39,7 +40,7 @@ Every reply callback has the same shape, with one typedef per call (e.g.
 `LogosDeliverySubscribeReplyFn`):
 
 ```c
-typedef void (*LogosDeliverySubscribeReplyFn)(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData);
+typedef void (*LogosDeliverySubscribeReplyFn)(int errCode, const char *const *reply, const char *errMsg, void *userData);
 ```
 
 `reply` and `errMsg` are borrowed: copy them if you need them after the
@@ -61,7 +62,7 @@ typedef void (*LogosDeliveryCreateFn)(
 );
 
 int logosdelivery_ctx_create(
-    NimFfiStr configJson,
+    const char *configJson,
     LogosDeliveryCreateFn onCreated,
     void *userData
 );
@@ -175,7 +176,7 @@ Subscribe to a content topic to receive messages.
 ```c
 int logosdelivery_ctx_subscribe(
     const LogosDeliveryCtx *ctx,
-    NimFfiStr contentTopicStr,
+    const char *contentTopicStr,
     LogosDeliverySubscribeReplyFn onReply,
     void *userData
 );
@@ -193,7 +194,7 @@ Unsubscribe from a content topic.
 ```c
 int logosdelivery_ctx_unsubscribe(
     const LogosDeliveryCtx *ctx,
-    NimFfiStr contentTopicStr,
+    const char *contentTopicStr,
     LogosDeliveryUnsubscribeReplyFn onReply,
     void *userData
 );
@@ -205,7 +206,7 @@ Send a message.
 ```c
 int logosdelivery_ctx_send(
     const LogosDeliveryCtx *ctx,
-    NimFfiStr messageJson,
+    const char *messageJson,
     LogosDeliverySendReplyFn onReply,
     void *userData
 );
@@ -298,7 +299,7 @@ typedef is emitted once per call.
 // Every call except the constructor: one typedef per call, all this shape.
 typedef void (*LogosDeliverySubscribeReplyFn)(
     int errCode,
-    const NimFfiStr *reply,
+    const char *const *reply,
     const char *errMsg,
     void *userData
 );
@@ -342,9 +343,9 @@ static volatile int created = 0;
 static LogosDeliveryCtx *node = NULL;
 
 // Every call shares this reply shape.
-void on_reply(int ret, const NimFfiStr *reply, const char *errMsg, void *userData) {
+void on_reply(int ret, const char *const *reply, const char *errMsg, void *userData) {
     if (ret == RET_OK) {
-        printf("Success: %.*s\n", reply ? (int)reply->len : 0, reply ? reply->data : "");
+        printf("Success: %s\n", reply && *reply ? *reply : "");
     } else {
         printf("Error: %s\n", errMsg ? errMsg : "unknown error");
     }
@@ -362,7 +363,7 @@ int main(void) {
         "}";
 
     // Create the node, and wait for on_created to hand over the context.
-    logosdelivery_ctx_create(nimffi_str(config), on_created, NULL);
+    logosdelivery_ctx_create(config, on_created, NULL);
     for (int i = 0; i < 100 && !created; i++) {
         usleep(100000);
     }
@@ -374,7 +375,7 @@ int main(void) {
     logosdelivery_ctx_start_node(node, on_reply, NULL);
 
     // Subscribe to a topic
-    logosdelivery_ctx_subscribe(node, nimffi_str("/myapp/1/chat/proto"), on_reply, NULL);
+    logosdelivery_ctx_subscribe(node, "/myapp/1/chat/proto", on_reply, NULL);
 
     // Send a message
     const char *msg = "{"
@@ -382,7 +383,7 @@ int main(void) {
         "\"payload\": \"SGVsbG8gV29ybGQ=\","
         "\"ephemeral\": false"
         "}";
-    logosdelivery_ctx_send(node, nimffi_str(msg), on_reply, NULL);
+    logosdelivery_ctx_send(node, msg, on_reply, NULL);
 
     // Clean up. logosdelivery_ctx_destroy is synchronous.
     logosdelivery_ctx_stop_node(node, on_reply, NULL);

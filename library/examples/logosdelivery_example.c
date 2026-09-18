@@ -126,11 +126,10 @@ void on_created(int ret, LogosDeliveryCtx *ctx, const char *errMsg, void *userDa
 
 // Reply callback shared by every logosdelivery_ctx_* call. `reply` is valid
 // only during the call.
-void on_reply(int ret, const NimFfiStr *reply, const char *errMsg, void *userData) {
+void on_reply(int ret, const char *const *reply, const char *errMsg, void *userData) {
     const char *operation = (const char *)userData;
     if (ret == RET_OK) {
-        printf("[%s] Success: %.*s\n", operation,
-               reply ? (int)reply->len : 0, reply ? reply->data : "");
+        printf("[%s] Success: %s\n", operation, reply && *reply ? *reply : "");
     } else {
         printf("[%s] Error: %s\n", operation, errMsg ? errMsg : "unknown error");
     }
@@ -207,8 +206,8 @@ static int create_channel(const LogosDeliveryCtx *ctx, const char *channel_id,
                           LogosDeliveryCryptoFn decrypt,
                           void *crypto_user_data) {
     return logosdelivery_ctx_channel_create(
-        ctx, nimffi_str(channel_id), nimffi_str(content_topic),
-        nimffi_str("logosdelivery-example"),
+        ctx, channel_id, content_topic,
+        "logosdelivery-example",
         (uint64_t)(uintptr_t)encrypt, (uint64_t)(uintptr_t)decrypt,
         (uint64_t)(uintptr_t)crypto_user_data,
         on_reply, (void *)"channel_create");
@@ -228,7 +227,7 @@ int main() {
     "}";
 
     printf("1. Creating node...\n");
-    logosdelivery_ctx_create(nimffi_str(config), on_created, NULL);
+    logosdelivery_ctx_create(config, on_created, NULL);
 
     // Creation is asynchronous: the context arrives in on_created.
     for (int i = 0; i < 100 && !create_node_done; i++) {
@@ -258,7 +257,7 @@ int main() {
 
     printf("\n4. Subscribing to content topic...\n");
     const char *contentTopic = "/example/1/chat/proto";
-    logosdelivery_ctx_subscribe(ctx, nimffi_str(contentTopic), on_reply, (void *)"subscribe");
+    logosdelivery_ctx_subscribe(ctx, contentTopic, on_reply, (void *)"subscribe");
 
     // Wait for subscription
     sleep(1);
@@ -267,12 +266,12 @@ int main() {
     logosdelivery_ctx_get_available_node_info_ids(ctx, on_reply, (void *)"get_available_node_info_ids");
 
     printf("\nRetrieving node info for a specific invalid ID...\n");
-    logosdelivery_ctx_get_node_info(ctx, nimffi_str("WrongNodeInfoId"), on_reply, (void *)"get_node_info");
+    logosdelivery_ctx_get_node_info(ctx, "WrongNodeInfoId", on_reply, (void *)"get_node_info");
 
     printf("\nRetrieving several node info for specific correct IDs...\n");
     const char *nodeInfoIds[] = {"Version", "MyMultiaddresses", "MyENR", "MyPeerId"};
     for (size_t i = 0; i < sizeof(nodeInfoIds) / sizeof(nodeInfoIds[0]); i++) {
-        logosdelivery_ctx_get_node_info(ctx, nimffi_str(nodeInfoIds[i]), on_reply, (void *)"get_node_info");
+        logosdelivery_ctx_get_node_info(ctx, nodeInfoIds[i], on_reply, (void *)"get_node_info");
     }
 
     printf("\nRetrieving available configs...\n");
@@ -286,7 +285,7 @@ int main() {
         "\"payload\": \"SGVsbG8sIExvZ29zIE1lc3NhZ2luZyE=\","
         "\"ephemeral\": false"
     "}";
-    logosdelivery_ctx_send(ctx, nimffi_str(message), on_reply, (void *)"send");
+    logosdelivery_ctx_send(ctx, message, on_reply, (void *)"send");
 
     // Poll for terminal message events (sent, error, or received) with timeout
     printf("Waiting for message delivery events...\n");
@@ -317,15 +316,15 @@ int main() {
 
     for (size_t i = 0; i < sizeof(channels) / sizeof(channels[0]); i++) {
         logosdelivery_ctx_channel_send(
-            ctx, nimffi_str(channels[i]),
-            nimffi_str("{\"payload\": \"SGVsbG8sIExvZ29zIE1lc3NhZ2luZyE=\","
-                       "\"ephemeral\": false}"),
+            ctx, channels[i],
+            "{\"payload\": \"SGVsbG8sIExvZ29zIE1lc3NhZ2luZyE=\","
+            "\"ephemeral\": false}",
             on_reply, (void *)"channel_send");
     }
     sleep(2);
 
     printf("\n8. Unsubscribing from content topic...\n");
-    logosdelivery_ctx_unsubscribe(ctx, nimffi_str(contentTopic), on_reply, (void *)"unsubscribe");
+    logosdelivery_ctx_unsubscribe(ctx, contentTopic, on_reply, (void *)"unsubscribe");
 
     sleep(1);
 

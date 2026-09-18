@@ -100,7 +100,7 @@ void signal_cond()
 
 // The reply shape of every logosdelivery_ctx_* call. `reply` is valid only
 // during the call.
-void reply_handler(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
+void reply_handler(int errCode, const char *const *reply, const char *errMsg, void *userData)
 {
   if (errCode != RET_OK)
   {
@@ -109,7 +109,7 @@ void reply_handler(int errCode, const NimFfiStr *reply, const char *errMsg, void
   }
   else if (reply != NULL)
   {
-    printf("Receiving event: %.*s\n", (int)reply->len, reply->data);
+    printf("Receiving event: %s\n", *reply ? *reply : "");
   }
 
   signal_cond();
@@ -144,7 +144,7 @@ void on_event_received(int callerRet, const char *msg, size_t len, void *userDat
 }
 
 char *contentTopic = NULL;
-void handle_content_topic(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
+void handle_content_topic(int errCode, const char *const *reply, const char *errMsg, void *userData)
 {
   if (errCode != RET_OK)
   {
@@ -153,9 +153,7 @@ void handle_content_topic(int errCode, const NimFfiStr *reply, const char *errMs
   }
   // Copy the reply out: it is only valid inside this callback.
   free(contentTopic);
-  contentTopic = malloc(reply->len + 1);
-  memcpy(contentTopic, reply->data, reply->len);
-  contentTopic[reply->len] = '\0';
+  contentTopic = strdup(*reply);
   signal_cond();
 }
 
@@ -167,8 +165,8 @@ void publish_message(const char *msg)
   char *msgPayload = b64_encode(msg, strlen(msg));
 
   WAKU_CALL(logosdelivery_ctx_waku_content_topic(
-      ctx, nimffi_str("appName"), 1, nimffi_str("contentTopicName"),
-      nimffi_str("encoding"), handle_content_topic, userData));
+      ctx, "appName", 1, "contentTopicName",
+      "encoding", handle_content_topic, userData));
   snprintf(jsonWakuMsg,
            MAX_MSG_SIZE,
            "{\"payload\":\"%s\",\"contentTopic\":\"%s\"}",
@@ -177,7 +175,7 @@ void publish_message(const char *msg)
   free(msgPayload);
 
   WAKU_CALL(logosdelivery_ctx_waku_relay_publish(
-      ctx, nimffi_str("/waku/2/rs/16/32"), nimffi_str(jsonWakuMsg), 10000,
+      ctx, "/waku/2/rs/16/32", jsonWakuMsg, 10000,
       reply_handler, userData));
 }
 
@@ -205,8 +203,8 @@ void ensure_channel(const char *senderId)
   }
   // Unencrypted: no cipher functions and no cipher user data.
   WAKU_CALL(logosdelivery_ctx_channel_create(
-      ctx, nimffi_str(kChannelId), nimffi_str(kChannelTopic),
-      nimffi_str(senderId), 0, 0, 0, reply_handler, userData));
+      ctx, kChannelId, kChannelTopic,
+      senderId, 0, 0, 0, reply_handler, userData));
   channelReady = 1;
 }
 
@@ -253,8 +251,8 @@ void send_large_channel_message()
          "and a single onChannelMessageReceived on any peer that reassembles it.\n",
          payloadLen, kChannelId, CHANNEL_DATA_SEGMENTS);
 
-  WAKU_CALL(logosdelivery_ctx_channel_send(ctx, nimffi_str(kChannelId),
-                                           nimffi_str(messageJson),
+  WAKU_CALL(logosdelivery_ctx_channel_send(ctx, kChannelId,
+                                           messageJson,
                                            reply_handler, userData));
   free(messageJson);
 }
@@ -265,15 +263,15 @@ void show_help_and_exit()
   exit(1);
 }
 
-void print_default_pubsub_topic(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
+void print_default_pubsub_topic(int errCode, const char *const *reply, const char *errMsg, void *userData)
 {
-  printf("Default pubsub topic: %.*s\n", reply ? (int)reply->len : 0, reply ? reply->data : "");
+  printf("Default pubsub topic: %s\n", reply && *reply ? *reply : "");
   signal_cond();
 }
 
-void print_waku_version(int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
+void print_waku_version(int errCode, const char *const *reply, const char *errMsg, void *userData)
 {
-  printf("Git Version: %.*s\n", reply ? (int)reply->len : 0, reply ? reply->data : "");
+  printf("Git Version: %s\n", reply && *reply ? *reply : "");
   signal_cond();
 }
 
@@ -317,7 +315,7 @@ void handle_user_input()
     char pubsubTopic[128];
     scanf("%127s", pubsubTopic);
 
-    WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(ctx, nimffi_str(pubsubTopic),
+    WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(ctx, pubsubTopic,
                                                      reply_handler, userData));
     printf("The subscription went well\n");
 
@@ -332,7 +330,7 @@ void handle_user_input()
     char peerAddr[512];
     scanf("%511s", peerAddr);
 
-    WAKU_CALL(logosdelivery_ctx_waku_connect(ctx, nimffi_str(peerAddr), 10000,
+    WAKU_CALL(logosdelivery_ctx_waku_connect(ctx, peerAddr, 10000,
                                              reply_handler, userData));
     printf("Connected\n");
 
@@ -397,7 +395,7 @@ int main(int argc, char **argv)
            // fail to start with "Address already in use".
            cfgNode.port + 1);
 
-  WAKU_CALL(logosdelivery_ctx_create(nimffi_str(jsonConfig), create_handler, userData));
+  WAKU_CALL(logosdelivery_ctx_create(jsonConfig, create_handler, userData));
 
   WAKU_CALL(logosdelivery_ctx_waku_default_pubsub_topic(ctx, print_default_pubsub_topic, userData));
   WAKU_CALL(logosdelivery_ctx_waku_version(ctx, print_waku_version, userData));
@@ -419,12 +417,12 @@ int main(int argc, char **argv)
 
   WAKU_CALL(logosdelivery_ctx_waku_listen_addresses(ctx, reply_handler, userData));
 
-  WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(ctx, nimffi_str("/waku/2/rs/16/32"),
+  WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(ctx, "/waku/2/rs/16/32",
                                                    reply_handler, userData));
 
   const char *bootnodes =
           "[\"enr:-QEkuEBIkb8q8_mrorHndoXH9t5N6ZfD-jehQCrYeoJDPHqT0l0wyaONa2-piRQsi3oVKAzDShDVeoQhy0uwN1xbZfPZAYJpZIJ2NIJpcIQiQlleim11bHRpYWRkcnO4bgA0Ni9ub2RlLTAxLmdjLXVzLWNlbnRyYWwxLWEud2FrdS5zYW5kYm94LnN0YXR1cy5pbQZ2XwA2Ni9ub2RlLTAxLmdjLXVzLWNlbnRyYWwxLWEud2FrdS5zYW5kYm94LnN0YXR1cy5pbQYfQN4DgnJzkwABCAAAAAEAAgADAAQABQAGAAeJc2VjcDI1NmsxoQKnGt-GSgqPSf3IAPM7bFgTlpczpMZZLF3geeoNNsxzSoN0Y3CCdl-DdWRwgiMohXdha3UyDw\",\"enr:-QEkuEB3WHNS-xA3RDpfu9A2Qycr3bN3u7VoArMEiDIFZJ66F1EB3d4wxZN1hcdcOX-RfuXB-MQauhJGQbpz3qUofOtLAYJpZIJ2NIJpcIQI2SVcim11bHRpYWRkcnO4bgA0Ni9ub2RlLTAxLmFjLWNuLWhvbmdrb25nLWMud2FrdS5zYW5kYm94LnN0YXR1cy5pbQZ2XwA2Ni9ub2RlLTAxLmFjLWNuLWhvbmdrb25nLWMud2FrdS5zYW5kYm94LnN0YXR1cy5pbQYfQN4DgnJzkwABCAAAAAEAAgADAAQABQAGAAeJc2VjcDI1NmsxoQPK35Nnz0cWUtSAhBp7zvHEhyU_AqeQUlqzLiLxfP2L4oN0Y3CCdl-DdWRwgiMohXdha3UyDw\"]";
-  WAKU_CALL(logosdelivery_ctx_waku_discv5_update_bootnodes(ctx, nimffi_str(bootnodes),
+  WAKU_CALL(logosdelivery_ctx_waku_discv5_update_bootnodes(ctx, bootnodes,
                                                            reply_handler, userData));
 
   WAKU_CALL(logosdelivery_ctx_waku_get_peerids_from_peerstore(ctx, reply_handler, userData));

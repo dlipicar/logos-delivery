@@ -119,11 +119,11 @@ template <class F>
 auto cifyReply(F &&f)
 {
     static F fn = std::forward<F>(f);
-    return [](int errCode, const NimFfiStr *reply, const char *errMsg, void *userData)
+    return [](int errCode, const char *const *reply, const char *errMsg, void *userData)
     {
         last_callback_ret = errCode;
-        const std::string text = reply != nullptr
-                                     ? std::string(reply->data, reply->len)
+        const std::string text = reply != nullptr && *reply != nullptr
+                                     ? std::string(*reply)
                                      : std::string(errMsg != nullptr ? errMsg : "");
         fn(text.c_str(), text.size());
         signal_cond();
@@ -181,7 +181,7 @@ void handle_user_input(const LogosDeliveryCtx *ctx)
         scanf("%127s", pubsubTopic);
 
         WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(
-            ctx, nimffi_str(pubsubTopic),
+            ctx, pubsubTopic,
             cifyReply([&](const char *msg, size_t len)
                       { event_handler(msg, len); }),
             nullptr));
@@ -198,7 +198,7 @@ void handle_user_input(const LogosDeliveryCtx *ctx)
         char peerAddr[512];
         scanf("%511s", peerAddr);
         WAKU_CALL(logosdelivery_ctx_waku_connect(
-            ctx, nimffi_str(peerAddr), 10000,
+            ctx, peerAddr, 10000,
             cifyReply([&](const char *msg, size_t len)
                       { event_handler(msg, len); }),
             nullptr));
@@ -220,8 +220,8 @@ void handle_user_input(const LogosDeliveryCtx *ctx)
         // reference it captures has to outlive this call.
         static std::string contentTopic;
         WAKU_CALL(logosdelivery_ctx_waku_content_topic(
-            ctx, nimffi_str("appName"), 1, nimffi_str("contentTopicName"),
-            nimffi_str("encoding"),
+            ctx, "appName", 1, "contentTopicName",
+            "encoding",
             cifyReply([](const char *msg, size_t len)
                       { contentTopic.assign(msg, len); }),
             nullptr));
@@ -232,7 +232,7 @@ void handle_user_input(const LogosDeliveryCtx *ctx)
                  msgPayload.data(), contentTopic.c_str());
 
         WAKU_CALL(logosdelivery_ctx_waku_relay_publish(
-            ctx, nimffi_str("/waku/2/rs/16/32"), nimffi_str(jsonWakuMsg), 10000,
+            ctx, "/waku/2/rs/16/32", jsonWakuMsg, 10000,
             cifyReply([&](const char *msg, size_t len)
                       { event_handler(msg, len); }),
             nullptr));
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
     // Creation is asynchronous, and the context is only handed over once the
     // node exists: a config that fails to parse on the worker thread leaves
     // node_ctx null. Bail out cleanly rather than use it.
-    logosdelivery_ctx_create(nimffi_str(jsonConfig), on_created, nullptr);
+    logosdelivery_ctx_create(jsonConfig, on_created, nullptr);
     waitForCallback();
     LogosDeliveryCtx *ctx = node_ctx;
     if (ctx == nullptr || last_callback_ret != RET_OK)
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 
     std::string pubsubTopic;
     WAKU_CALL(logosdelivery_ctx_waku_pubsub_topic(
-        ctx, nimffi_str("example"),
+        ctx, "example",
         cifyReply([&](const char *msg, size_t len)
                   { pubsubTopic.assign(msg, len); }),
         nullptr));
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
         nullptr));
 
     WAKU_CALL(logosdelivery_ctx_waku_relay_subscribe(
-        ctx, nimffi_str(defaultPubsubTopic.c_str()),
+        ctx, defaultPubsubTopic.c_str(),
         cifyReply([&](const char *msg, size_t len)
                   { event_handler(msg, len); }),
         nullptr));
