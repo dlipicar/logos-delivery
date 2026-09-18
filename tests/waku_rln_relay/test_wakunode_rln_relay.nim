@@ -137,11 +137,12 @@ procSuite "WakuNode - RLN relay":
     # prepare the epoch
     var message =
       WakuMessage(payload: @payload, contentTopic: contentTopic, timestamp: now())
-    doAssert(
-      node1.rln
-        .unsafeAppendRLNProof(message, node1.rln.getCurrentEpoch(), MessageId(0))
-        .isOk()
-    )
+    message = (
+      await node1.rln.unsafeAppendRLNProof(
+        message, node1.rln.getCurrentEpoch(), MessageId(0)
+      )
+    ).valueOr:
+      raiseAssert $error
 
     info " Nodes participating in the test",
       node1 = shortLog(node1.switch.peerInfo.peerId),
@@ -265,9 +266,11 @@ procSuite "WakuNode - RLN relay":
         contentTopic: contentTopics[0],
       )
 
-      node1.rln.unsafeAppendRLNProof(
-        message, node1.rln.getCurrentEpoch(), MessageId(i.uint8)
-      ).isOkOr:
+      message = (
+        await node1.rln.unsafeAppendRLNProof(
+          message, node1.rln.getCurrentEpoch(), MessageId(i.uint8)
+        )
+      ).valueOr:
         raiseAssert $error
       messages1.add(message)
 
@@ -278,9 +281,11 @@ procSuite "WakuNode - RLN relay":
         contentTopic: contentTopics[1],
       )
 
-      node2.rln.unsafeAppendRLNProof(
-        message, node2.rln.getCurrentEpoch(), MessageId(i.uint8)
-      ).isOkOr:
+      message = (
+        await node2.rln.unsafeAppendRLNProof(
+          message, node2.rln.getCurrentEpoch(), MessageId(i.uint8)
+        )
+      ).valueOr:
         raiseAssert $error
       messages2.add(message)
 
@@ -398,8 +403,8 @@ procSuite "WakuNode - RLN relay":
     var message =
       WakuMessage(payload: @payload, contentTopic: DefaultPubsubTopic, timestamp: now())
 
-    node1.rln.unsafeAppendRLNProof(message, epoch, MessageId(0)).isOkOr:
-      assert false, "Failed to append rln proof: " & $error
+    message = (await node1.rln.unsafeAppendRLNProof(message, epoch, MessageId(0))).valueOr:
+      raiseAssert "Failed to append rln proof: " & $error
 
     # message.payload = "Invalid".toBytes()
     message.proof[0] = message.proof[0] xor 0x01
@@ -515,12 +520,12 @@ procSuite "WakuNode - RLN relay":
         contentTopic: DefaultPubsubTopic,
       )
 
-    node1.rln.unsafeAppendRLNProof(wm1, epoch_1, MessageId(0)).isOkOr:
+    wm1 = (await node1.rln.unsafeAppendRLNProof(wm1, epoch_1, MessageId(0))).valueOr:
       raiseAssert $error
-    node1.rln.unsafeAppendRLNProof(wm2, epoch_1, MessageId(0)).isOkOr:
+    wm2 = (await node1.rln.unsafeAppendRLNProof(wm2, epoch_1, MessageId(0))).valueOr:
       raiseAssert $error
 
-    node1.rln.unsafeAppendRLNProof(wm3, epoch_2, MessageId(2)).isOkOr:
+    wm3 = (await node1.rln.unsafeAppendRLNProof(wm3, epoch_2, MessageId(2))).valueOr:
       raiseAssert $error
 
     #  relay handler for node3
@@ -685,11 +690,11 @@ procSuite "WakuNode - RLN relay":
       node1.rln.calcEpoch(epochTime().float64 + node1.rln.rlnEpochSizeSec.float64 * 4)
 
     # Epoch 1
-    node1.rln.unsafeAppendRLNProof(wm1, epoch_1, MessageId(0)).isOkOr:
+    wm1 = (await node1.rln.unsafeAppendRLNProof(wm1, epoch_1, MessageId(0))).valueOr:
       raiseAssert $error
 
     # Message wm2 is published in the same epoch as wm1, so it'll be considered spam
-    node1.rln.unsafeAppendRLNProof(wm2, epoch_1, MessageId(0)).isOkOr:
+    wm2 = (await node1.rln.unsafeAppendRLNProof(wm2, epoch_1, MessageId(0))).valueOr:
       raiseAssert $error
 
     discard await node1.publish(Opt.some(DefaultPubsubTopic), wm1)
@@ -701,7 +706,7 @@ procSuite "WakuNode - RLN relay":
 
     # Epoch 2
 
-    node1.rln.unsafeAppendRLNProof(wm3, epoch_2, MessageId(0)).isOkOr:
+    wm3 = (await node1.rln.unsafeAppendRLNProof(wm3, epoch_2, MessageId(0))).valueOr:
       raiseAssert $error
 
     discard await node1.publish(Opt.some(DefaultPubsubTopic), wm3)
@@ -713,7 +718,7 @@ procSuite "WakuNode - RLN relay":
       await node2.waitForNullifierLog(2)
 
     # Epoch 3
-    node1.rln.unsafeAppendRLNProof(wm4, epoch_3, MessageId(0)).isOkOr:
+    wm4 = (await node1.rln.unsafeAppendRLNProof(wm4, epoch_3, MessageId(0))).valueOr:
       raiseAssert $error
 
     discard await node1.publish(Opt.some(DefaultPubsubTopic), wm4)
@@ -723,7 +728,7 @@ procSuite "WakuNode - RLN relay":
       await node2.waitForNullifierLog(3)
 
     # Epoch 4
-    node1.rln.unsafeAppendRLNProof(wm5, epoch_4, MessageId(0)).isOkOr:
+    wm5 = (await node1.rln.unsafeAppendRLNProof(wm5, epoch_4, MessageId(0))).valueOr:
       raiseAssert $error
 
     discard await node1.publish(Opt.some(DefaultPubsubTopic), wm5)
@@ -733,7 +738,7 @@ procSuite "WakuNode - RLN relay":
       await node2.waitForNullifierLog(4)
 
     # Epoch 5
-    node1.rln.unsafeAppendRLNProof(wm6, epoch_5, MessageId(0)).isOkOr:
+    wm6 = (await node1.rln.unsafeAppendRLNProof(wm6, epoch_5, MessageId(0))).valueOr:
       raiseAssert $error
 
     discard await node1.publish(Opt.some(DefaultPubsubTopic), wm6)
