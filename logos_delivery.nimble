@@ -72,10 +72,10 @@ requires "nim == 2.2.6",
 # For commit-pinned releases, the preceding link records the associated
 # upstream release tag at the time the revision was selected.
 
-# Cross-target codegen paths (nim-ffi#168), hygienic request parameters
-# (nim-ffi#169) and a thread's dispatcher closed last, by chronos
-# (nim-ffi#171's merge), after v0.3.1-rc.0:
-requires "https://github.com/logos-messaging/nim-ffi#9950e18b4110b35bc62993114ee083b5062740e1"
+# Cross-target codegen paths (nim-ffi#168), hygienic request parameters (#169),
+# chronos closing a thread's dispatcher last (#171) and no crash on a nil handle
+# as the first call (#172's merge), after v0.3.1-rc.0:
+requires "https://github.com/logos-messaging/nim-ffi#5096bb7f4cb3cfe6514c2c45fc7d8135e8db084c"
 
 # No tag at pinning time; revision was 19 commits after v0.3.1-rc.0.
 requires "https://github.com/logos-messaging/nim-sds.git#b12f5ee07c5b764303b51fb948b32a4ade1de3b5"
